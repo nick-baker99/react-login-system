@@ -1,9 +1,12 @@
 import { React, useRef, useState, useEffect, Fragment } from 'react';
 import { faCheck, faTimes, faInfoCircle } from '@fortawesome/fontawesome-free-solid';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import axios from '../api/axios';
+import { Link } from 'react-router-dom';
 
 const USER_REGEX = /^[a-zA-Z][a-zA-z0-9-_]{3,23}$/;
 const PWD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%]).{8,24}$/;
+const REGISTER_URL='/register';
 
 function Register() {
   // used for setting focus on use input on page load
@@ -37,8 +40,6 @@ function Register() {
 
   useEffect(() => {
     const result = PWD_REGEX.test(pwd);
-    console.log(result);
-    console.log(pwd);
     setValidPwd(result);
     const match = pwd === matchPwd;
     setValidMatch(match);
@@ -57,8 +58,30 @@ function Register() {
       setErrMsg('Invalid Entry');
       return;
     }
-    console.log(user, pwd);
-    setSuccess(true);
+    try {
+      const response = await axios.post(
+        REGISTER_URL,
+        JSON.stringify({ user, pwd }),
+        {
+          headers: { 'Content-Type': 'application/json' },
+          withCredentials: true
+        }
+      );
+      setUser('');
+      setPwd('');
+      setMatchPwd('');
+      setSuccess(true);
+      // clear input fields
+    } catch (err) {
+      if (!err?.response) {
+        setErrMsg('No server response');
+      } else if (err.response?.status === 409) {
+        setErrMsg('Username taken');
+      } else {
+        setErrMsg('Registration failed');
+      }
+      errRef.current.focus();
+    }
   };
 
   return (
@@ -67,7 +90,7 @@ function Register() {
         <section>
           <h1>Success!</h1>
           <p>
-            <a href="#">Sign In</a>
+            <Link to="/login">Sign In</Link>
           </p>
         </section>
       ) : (
@@ -161,7 +184,7 @@ function Register() {
             <p>
               Already registered?<br />
               <span className="line">
-                <a href="#">Sign In</a>
+                <Link to="/login">Sign In</Link>
               </span>
             </p>
           </form>

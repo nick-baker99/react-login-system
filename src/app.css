@@ -112,3 +112,8 @@ button {
 .line {
     display: inline-block;
 }
+
+section input[type="text"],
+section input[type="password"] {
+  width: 100%;
+}
