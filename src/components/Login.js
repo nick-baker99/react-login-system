@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect, Fragment } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import axios from '../api/axios';
 import useAuth from '../hooks/useAuth';
 
@@ -7,13 +7,17 @@ const LOGIN_URL="/auth";
 
 function Login() {
   const { setAuth } = useAuth();
+
+  const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from?.pathname || '/';
+
   const userRef = useRef();
   const errRef = useRef();
 
   const [user, setUser] = useState('');
   const [pwd, setPwd] = useState('');
   const [errMsg, setErrMsg] = useState('');
-  const [success, setSuccess] = useState(false);
 
   useEffect(() => {
     userRef.current.focus();
@@ -41,7 +45,8 @@ function Login() {
       setAuth({ user, pwd, roles, accessToken });
       setUser('');
       setPwd('');
-      setSuccess(true);
+
+      navigate(from, { replace: true });
     } catch (err) {
       if (!err?.response) {
         setErrMsg('No server response');
@@ -59,50 +64,39 @@ function Login() {
 
   return (
     <Fragment>
-      {success ? (
-        <section>
-          <h1>You're logged in!</h1>
-          <br />
+      <section>
+        <p ref={errRef} className={errMsg ? 'errmsg': 'offscreen'} aria-live="assertive">{errMsg}</p>
+        <h1>Sign In</h1>
+        <form onSubmit={handleSubmit}>
+          <label htmlFor="username">
+            Username:
+            <input 
+              type="text"
+              id="username"
+              value={user}
+              ref={userRef}
+              autoComplete="off"
+              onChange={(e) => setUser(e.target.value)}
+              required
+            />
+          </label>
+          <label htmlFor="username">
+            <input 
+              type="password"
+              id="password"
+              value={pwd}
+              onChange={(e) => setPwd(e.target.value)}
+              required
+            />
+          </label>
+          <button>Sign In</button>
           <p>
-            <Link to="/">Go to home</Link>
+            Need an account?<br />
+            <Link to="/register">Sign Up</Link>
           </p>
-        </section>
-      ) : (
-        <section>
-          <p ref={errRef} className={errMsg ? 'errmsg': 'offscreen'} aria-live="assertive">{errMsg}</p>
-          <h1>Sign In</h1>
-          <form onSubmit={handleSubmit}>
-            <label htmlFor="username">
-              Username:
-              <input 
-                type="text"
-                id="username"
-                value={user}
-                ref={userRef}
-                autoComplete="off"
-                onChange={(e) => setUser(e.target.value)}
-                required
-              />
-            </label>
-            <label htmlFor="username">
-              <input 
-                type="password"
-                id="password"
-                value={pwd}
-                onChange={(e) => setPwd(e.target.value)}
-                required
-              />
-            </label>
-            <button>Sign In</button>
-            <p>
-              Need an account?<br />
-              <Link to="/register">Sign Up</Link>
-            </p>
-          </form>
-        </section>
-      )}
-    </Fragment>
-    
+        </form>
+      </section>
+    </Fragment> 
   )
 }
 
